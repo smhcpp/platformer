@@ -5,6 +5,9 @@ pub struct CocouPlugin;
 struct Player;
 
 #[derive(Component)]
+struct Direction(Vec2);
+
+#[derive(Component)]
 struct Name(String);
 
 #[derive(Resource)]
@@ -33,30 +36,29 @@ fn update_people(mut query: Query<&mut Name, With<Player>>) {
     }
 }
 
-fn handle_keys(input: Res<ButtonInput<KeyCode>>, input_key: Res<ButtonInput<Key>>) {
-    if input.just_pressed(KeyCode::ArrowRight) {
-        println!("Right pressed!");
-    }
-    if input.just_pressed(KeyCode::ArrowLeft) {
-        println!("Left pressed!");
-    }
-    if input.just_pressed(KeyCode::ArrowUp) {
-        println!("Up pressed!");
-    }
-    if input.just_pressed(KeyCode::ArrowDown) {
-        println!("Down pressed!");
-    }
-    if input.just_pressed(KeyCode::KeyC) {
-        println!("C pressed!");
-    }
-    if input.just_pressed(KeyCode::KeyX) {
-        println!("X pressed!");
-    }
-    if input.just_pressed(KeyCode::KeyV) {
-        println!("V pressed!");
-    }
-    if input.just_pressed(KeyCode::KeyZ) {
-        println!("Z pressed!");
+fn handle_keys(
+    input: Res<ButtonInput<KeyCode>>,
+    time: Res<Time>,
+    mut query: Query<(&mut Transform, &mut Direction), With<Player>>,
+) {
+    let speed: f32 = 200.0;
+    for (mut transform, mut direction) in &mut query {
+        if input.pressed(KeyCode::ArrowRight) {
+            direction.0.x = 1.0;
+        } else if input.pressed(KeyCode::ArrowLeft) {
+            direction.0.x = -1.0;
+        } else {
+            direction.0.x = 0.0;
+        }
+        if input.pressed(KeyCode::ArrowUp) {
+            direction.0.y = 1.0;
+        } else if input.pressed(KeyCode::ArrowDown) {
+            direction.0.y = -1.0;
+        } else {
+            direction.0.y = 0.0;
+        }
+        let move_dir = direction.0.normalize_or_zero();
+        transform.translation += move_dir.extend(0.0) * speed * time.delta_secs();
     }
 }
 
@@ -70,6 +72,8 @@ fn setup(
     let color = Color::srgba(0.0, 0.0, 0.9, 1.0);
     commands.spawn((
         Mesh2d(capsule),
+        Player,
+        Direction(Vec2::ZERO),
         MeshMaterial2d(materials.add(color)),
         Transform::from_xyz(0.0, 0.0, 0.0),
     ));
