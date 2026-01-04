@@ -8,30 +8,15 @@ struct Player;
 struct Direction(Vec2);
 
 #[derive(Component)]
-struct Name(String);
+struct Platform;
 
 #[derive(Resource)]
 struct GreetTimer(Timer);
-
-fn add_people(mut commands: Commands) {
-    commands.spawn((Player, Name("Elaina Proctor".to_string())));
-    commands.spawn((Player, Name("Renzo Hume".to_string())));
-    commands.spawn((Player, Name("Zayna Nieves".to_string())));
-}
 
 fn greet_people(time: Res<Time>, mut timer: ResMut<GreetTimer>, query: Query<&Name, With<Player>>) {
     if timer.0.tick(time.delta()).just_finished() {
         for name in &query {
             println!("hello {}!", name.0);
-        }
-    }
-}
-
-fn update_people(mut query: Query<&mut Name, With<Player>>) {
-    for mut name in &mut query {
-        if name.0 == "Elaina Proctor" {
-            name.0 = "Elaina Hume".to_string();
-            break; // We don't need to change any other names.
         }
     }
 }
@@ -77,6 +62,27 @@ fn setup(
         MeshMaterial2d(materials.add(color)),
         Transform::from_xyz(0.0, 0.0, 0.0),
     ));
+    let platform_mesh = meshes.add(Rectangle::new(1.0, 1.0));
+    let platform_color = Color::srgba(0.4, 0.4, 0.4, 1.0);
+    let platform_material = materials.add(platform_color);
+    let platform_position = [
+        (Vec2::new(-100., -100.), Vec2::new(100., 100.)),
+        (Vec2::new(300., -100.), Vec2::new(200., 100.)),
+        (Vec2::new(-500., 100.), Vec2::new(100., 200.)),
+        (Vec2::new(300., 100.), Vec2::new(200., 100.)),
+    ];
+    for (pos, size) in platform_position {
+        commands.spawn((
+            Mesh2d(platform_mesh.clone()),
+            MeshMaterial2d(platform_material.clone()),
+            Transform {
+                translation: pos.extend(0.0),
+                scale: size.extend(1.0),
+                ..default()
+            },
+            Platform,
+        ));
+    }
 }
 
 impl Plugin for CocouPlugin {
